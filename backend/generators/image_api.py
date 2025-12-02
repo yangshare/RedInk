@@ -171,7 +171,24 @@ class ImageApiGenerator(ImageGeneratorBase):
                 data_uri = f"data:image/png;base64,{base64_image}"
                 image_uris.append(data_uri)
 
-            payload["image"] = image_uris
+            # 硅基流动 API 特殊处理
+            is_siliconflow = "siliconflow" in self.base_url
+            
+            # 如果是硅基流动，且模型是文生图模型 (Qwen-Image, FLUX 等非 Edit 模型)
+            # 强制移除 image 参数，因为不支持
+            if is_siliconflow and "edit" not in model.lower() and "controlnet" not in model.lower():
+                 logger.warning(f"  硅基流动文生图模型 {model} 不支持参考图参数，已自动移除 image 字段")
+                 # 仍然保留 prompt 的修改，以便 AI 知道意图，但移除实际的图片参数
+                 # 不做任何操作，因为下面 payload["image"] 是最后赋值的
+                 # 我们只需要在赋值前做判断即可
+            else:
+                payload["image"] = image_uris
+            
+            # 硅基流动 Image-Edit 模型特殊处理：image 必须是字符串，不是数组
+            if is_siliconflow and ("edit" in model.lower() or "controlnet" in model.lower()):
+                if image_uris:
+                    payload["image"] = image_uris[0]
+                    logger.debug("  硅基流动模型: 将 image 列表转换为单张图片字符串")
 
             ref_count = len(all_reference_images)
             enhanced_prompt = f"""参考提供的 {ref_count} 张图片的风格（色彩、光影、构图、氛围），生成一张新图片。

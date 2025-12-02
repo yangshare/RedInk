@@ -54,11 +54,22 @@ def create_image_blueprint():
             # 解析 base64 格式的用户参考图片
             user_images = _parse_base64_images(data.get('user_images', []))
 
+            # 构建详细的 pages 日志信息
+            pages_log = []
+            if pages:
+                for p in pages:
+                    pages_log.append({
+                        'index': p.get('index'),
+                        'type': p.get('type'),
+                        'content': (p.get('content', '')[:50] + '...') if len(p.get('content', '')) > 50 else p.get('content')
+                    })
+
             log_request('/generate', {
                 'pages_count': len(pages) if pages else 0,
                 'task_id': task_id,
                 'user_topic': user_topic[:50] if user_topic else None,
-                'user_images': user_images
+                'user_images_count': len(user_images) if user_images else 0,
+                'pages_preview': pages_log
             })
 
             if not pages:

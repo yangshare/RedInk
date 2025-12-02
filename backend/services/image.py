@@ -165,6 +165,11 @@ class ImageService:
                         user_topic=user_topic if user_topic else "未提供"
                     )
 
+                # 打印详细的生成参数日志
+                logger.info(f"🎨 开始生成图片 [{index}] (Attempt {attempt + 1}/{max_retries})")
+                logger.info(f"📋 Prompt 内容:\n{prompt}")
+                logger.info(f"⚙️ 生成参数: Provider={self.provider_config.get('type')}, Model={self.provider_config.get('model')}")
+
                 # 调用生成器生成图片
                 if self.provider_config.get('type') == 'google_genai':
                     logger.debug(f"  使用 Google GenAI 生成器")
